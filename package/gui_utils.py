@@ -117,8 +117,8 @@ class RIRg_GUI:
         self.micCoords: list[tuple[float, float]] = []
 
         ## RIRs
-        self.RIRsAudio: np.ndarray | None = None
-        self.RIRsNoise: np.ndarray | None = None
+        self.RIRsAudio: np.ndarray = None
+        self.RIRsNoise: np.ndarray = None
 
         ## Start GUI
         self.make_window()
@@ -280,25 +280,23 @@ class RIRg_GUI:
         new_coord_x = x * roomdim / width
         new_coord_y = y * roomdim / height
 
-        match self.option.get():
-            case "mic":  # Only one mic array is allowed, hence replace
-                offsetCM = float(self.distBwMics.get())
-                nMics = int(self.nMicsPerArray.get())
+        if self.option.get() == "mic":  # Only one mic array is allowed, hence replace
+            offsetCM = float(self.distBwMics.get())
+            nMics = int(self.nMicsPerArray.get())
 
-                self.micCoords = [
-                    (new_coord_x, new_coord_y - i * offsetCM / 100)
-                    for i in range(nMics)
-                ]
+            self.micCoords = [
+                (new_coord_x, new_coord_y - i * offsetCM / 100) for i in range(nMics)
+            ]
 
-                # Prevent weird corner cases
-                if np.any(np.asarray(self.micCoords) < 0) or np.any(
-                    np.asarray(self.micCoords) > roomdim
-                ):
-                    print("/!\\ microphone array would not fit in the room, skipping.")
-            case "audio":
-                self.audioCoords.append((new_coord_x, new_coord_y))
-            case "noise":
-                self.noiseCoords.append((new_coord_x, new_coord_y))
+            # Prevent weird corner cases
+            if np.any(np.asarray(self.micCoords) < 0) or np.any(
+                np.asarray(self.micCoords) > roomdim
+            ):
+                print("/!\\ microphone array would not fit in the room, skipping.")
+        elif self.option.get() == "audio":
+            self.audioCoords.append((new_coord_x, new_coord_y))
+        elif self.option.get() == "noise":
+            self.noiseCoords.append((new_coord_x, new_coord_y))
 
         ## Redraw everything
         self._redraw_room()
@@ -445,9 +443,9 @@ def compute_rirs(
     roomDim: float,
     t60: float,
     fsRIR: float,
-    rirLength: int | None = None,
+    rirLength: int = None,
     c: float = 340,
-) -> tuple[np.ndarray | None, np.ndarray | None]:
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Computes RIRs based on MATLAB function from the KUL course "P&D ISSP 2022"
     `create_rirs.m`.

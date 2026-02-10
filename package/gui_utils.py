@@ -49,7 +49,11 @@ class Asc(NamedTuple):
             (
                 f">> {key}: {value}"
                 if key not in excluded
-                else f">> {key}: numpy array of shape {value.shape}"
+                else (
+                    f">> {key}: numpy array of shape {value.shape}"
+                    if value is not None
+                    else f">> {key}: None"
+                )
             )
             for key, value in self._asdict().items()
         ]
